@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电影展示</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .nav {
+            background: #333;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .movie-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .movie-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-bottom: 3px solid #e50914;
+        }
+
+        .movie-info {
+            padding: 15px;
+        }
+
+        .movie-title {
+            margin-bottom: 0; /* 移除原有的下边距 */
+            flex: 1; /* 让标题占据剩余空间 */
+            margin-right: 10px; /* 与按钮保持间距 */
+        }
+
+        .movie-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 8px 0;
+        }
+
+        .movie-status {
+            background: #e50914;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .price-tag {
+            color: #e50914;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        /* 添加购票按钮样式 */
+        .buy-ticket-btn {
+            background-color: #e50914;
+            color: white;
+            padding: 5px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .buy-ticket-btn:hover {
+            background-color: #ff0f1a;
+        }
+
+        .title-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div class="nav">
+        <div class="nav-container">
+            <div>
+                <a href="/suwe/index.html">首页</a>
+            </div>
+            <div>
+                <a href="/suwe/personal.html">个人中心</a>
+                <a href="/suwe/orders.html">订单信息</a>
+                <a href="/suwe/login.html">退出登录</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>电影购票系统</h1>
+        <div class="movie-list" id="movieList"></div>
+        <div class="loading" id="loading">加载中...</div>
+    </div>
+
+    <script>
+        const movieList = document.getElementById('movieList');
+        const loading = document.getElementById('loading');
+
+        function renderMovies(movies) {
+            movieList.innerHTML = movies.map(movie => `
+                <div class="movie-card" onclick="location.href='/suwe/movie-detail.html?movieId=${movie.id}'">
+
+                    <div class="movie-poster"
+                         style="background-image: url('${movie.imageUrl}');
+                                background-size: cover;
+                                background-position: top;
+                                background-color: #f0f0f0;">
+                                ${movie.status === 1 ? '<div class="movie-status">正在热映</div>' : ''}
+                    </div>
+
+                    <div class="movie-info">
+                     <div class="title-container">
+                                <h2 class="movie-title">${movie.title}</h2>
+                                <!-- 添加购票按钮，阻止事件冒泡以避免触发卡片的点击事件 -->
+                                <button class="buy-ticket-btn"
+                                        onclick="event.stopPropagation(); location.href='/suwe/buyTicket?movieId=${movie.id}'">
+                                    购票
+                                </button>
+                            </div>
+
+
+                        <div class="price-tag">¥${movie.price.toFixed(1)}</div>
+
+                        <div class="movie-meta">
+                            <span>🎬 ${movie.type}</span> |
+                            <span>⏱ ${movie.duration}分钟</span>
+                        </div>
+
+                        <div class="movie-meta">
+                            <span>📅 ${movie.releaseDate}</span>
+                        </div>
+
+                        <div class="movie-meta">
+                            <span>🎥 导演：${movie.director}</span>
+                        </div>
+
+                        <div class="movie-meta">
+                            <span>👥 主演：${movie.actors}</span>
+                        </div>
+
+                        <p class="movie-meta">${movie.description}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            loading.style.display = 'none';
+        }
+
+        // 获取电影数据
+        fetch('/suwe/api/movies')
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    renderMovies(result.data);
+                } else {
+                    loading.textContent = '加载失败：' + result.errorMsg;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loading.textContent = '加载失败，请稍后重试';
+            });
+    </script>
+</body>
+</html>
