@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购票页面</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .screen {
+            background-color: #e0e0e0; /* 浅色银幕 */
+            color: #333;
+            text-align: center;
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .seat {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            text-align: center;
+            line-height: 40px;
+            border: 1px solid #000;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .available {
+            background-color: #ffcc00;
+
+        }
+        .selected {
+            background-color: #fb4242;
+        }
+        .unavailable {
+            background-color: #eadfdf;
+            cursor: not-allowed;
+        }
+        .button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #218838;
+        }
+        .total-price {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        select {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .seat-row {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>购票页面</h1>
+        <h2>电影名称: <span id="movieName"></span></h2>
+        <h2>选择场次</h2>
+        <select id="showingSelect" onchange="loadSeats()">
+            <!-- 这里将动态填充场次 -->
+        </select>
+
+        <h2>选择座位</h2>
+        <div class="screen">银幕</div>
+        <div id="seatsContainer">
+            <!-- 这里将动态填充座位 -->
+        </div>
+
+        <div class="total-price">总价格: <span id="totalPrice">0</span> 元</div>
+        <button id="buyButton" class="button" onclick="confirmPurchase()">确认购票</button>
+    </div>
+
+    <script>
+        let movieId; // 动态获取电影ID
+        let selectedSeats = [];
+        let ticketPrice; // 电影票价格
+
+        // 页面加载时自动获取URL中的movieId
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            movieId = urlParams.get('movieId'); // 从URL中获取movieId
+            loadMovieDetails(); // 加载电影信息
+        };
+
+        // 加载电影信息和场次
+        function loadMovieDetails() {
+            fetch(`/suwe/buy?movieId=${movieId}`, { // 使用movieId
+                method: 'POST'
+            })
+                .then(response => response.text()) // 先获取文本
+                .then(data => {
+                    console.log("返回的字符串:", data); // 打印返回的字符串
+                    const jsonData = JSON.parse(data); // 解析JSON字符串
+                    if (jsonData.success) {
+                        const movie = jsonData.data.data; // 获取电影数据
+                        document.getElementById('movieName').innerText = movie.title; // 显示电影名称
+                        ticketPrice = parseFloat(movie.price); // 使用提供的电影票价格，确保转换为数字
+                        loadShowings(jsonData.showings); // 加载场次
+                    } else {
+                        console.error("加载电影信息失败:", jsonData);
+                    }
+                })
+                .catch(error => console.error("请求错误:", error));
+        }
+
+        // 加载场次
+        function loadShowings(showings) {
+            const showingSelect = document.getElementById('showingSelect');
+            showingSelect.innerHTML = ''; // 清空现有选项
+            showings.forEach(showing => {
+                const option = document.createElement('option');
+                option.value = showing.id; // 使用showingId
+                option.innerText = `${showing.date} ${showing.showTime} (${showing.theater})`;
+                showingSelect.appendChild(option);
+            });
+            loadSeats(); // 加载默认场次的座位
+        }
+
+        // 加载座位
+        function loadSeats() {
+            const showingId = document.getElementById('showingSelect').value;
+            fetch(`/suwe/getMovieDetails?showingId=${showingId}`) // 使用showingId
+                .then(response => response.text()) // 先获取文本
+                .then(data => {
+                    const jsonData = JSON.parse(data); // 解析JSON字符串
+                    const seatsContainer = document.getElementById('seatsContainer');
+                    seatsContainer.innerHTML = ''; // 清空现有座位
+                    selectedSeats = []; // 清空已选择的座位
+
+                    jsonData.data.forEach(seat => {
+                        const seatDiv = document.createElement('div');
+                        seatDiv.className = 'seat ' + (seat.status === 1 ? 'unavailable' : 'available');
+                        seatDiv.innerText = seat.seatNumber;
+                        seatDiv.onclick = () => {
+                            if (seat.status === 0) { // 只有可用座位可以选择
+                                seatDiv.classList.toggle('selected');
+                                if (selectedSeats.includes(seat)) {
+                                    selectedSeats = selectedSeats.filter(s => s.id !== seat.id);
+                                } else {
+                                    selectedSeats.push(seat);
+                                }
+                                const totalPrice = selectedSeats.length * ticketPrice; // 使用实际票价
+                                document.getElementById('totalPrice').innerText = totalPrice.toFixed(2);
+                            }
+                        };
+                        seatsContainer.appendChild(seatDiv);
+                    });
+                })
+                .catch(error => console.error("加载座位错误:", error));
+        }
+
+        // 确认购票
+        function confirmPurchase() {
+
+            const currentUserData = localStorage.getItem('currentUser');
+            const currentUser = JSON.parse(currentUserData);
+            const userId = currentUser.id; // 假设用户ID为1，怎么拿到动态数据
+            if(!currentUserData || !userId){
+                alert('请先登录');
+                window.location.href = '/suwe/login.html';
+                return;
+            }
+
+            const price = selectedSeats.length * ticketPrice; // 使用实际票价
+            const seatIds = selectedSeats.map(seat => seat.id);
+            const showingId = document.getElementById('showingSelect').value; // 获取选中的场次ID
+            if (selectedSeats.length === 0) {
+                alert('请选择座位');
+                return;
+            }
+
+            fetch('/suwe/api/bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `userId=${userId}&movieId=${movieId}&price=${price}&showingId=${showingId}&seatIds=${JSON.stringify(seatIds)}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('购票成功-----！');
+                        window.location.href = '/suwe/index.html'; // 跳转到主页
+                    }else{
+                        alert(data.errorMsg);
+                    }
+                })
+                .catch(error => console.error("购票请求错误:", error));
+        }
+    </script>
+</body>
+</html>
