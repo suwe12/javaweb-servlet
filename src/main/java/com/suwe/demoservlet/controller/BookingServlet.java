@@ -29,11 +29,14 @@ public class BookingServlet extends HttpServlet {
 		String seatIds = request.getParameter("seatIds");
 		String[] seatIdsStr = seatIds.substring(1, seatIds.length() - 1).split(",");
 
+		if ( userId == null || movieId == null || showingId == null || price == null || seatIdsStr == null ) {
+			response.setContentType("application/json;charset=utf-8");
+			response.getWriter().write(JSON.toJSONString(Result.fail("无效的输入参数")));
+		}
 		System.out.println("[成功] 已获取买票信息" + userId + "--movieId" + movieId + "--price" + price + "--showingId" + showingId + "--seatIds" + seatIdsStr);
 
 		// 调用服务层创建订单
 		Result orderRes = bookingService.createOrder(userId, movieId, price, seatIdsStr, showingId);
-		System.out.println("[成功] 创建订单成功");
 
 		response.setContentType("application/json;charset=utf-8");
 		response.getWriter().write(JSON.toJSONString(orderRes));

@@ -6,13 +6,12 @@ import com.suwe.demoservlet.utils.DBUtil;
 import java.sql.*;
 
 public class OrderDao {
-	public void createOrder(Order order) {
-		Connection conn = null;  //数据库连接对象
+	public void createOrder(Order order,Connection conn) {
+
 		PreparedStatement ps = null;  //预编译的 SQL 语句对象
 		ResultSet generatedKeys = null;  // 新增：用于获取自增 ID
 
 		try {
-			conn = DBUtil.getConnection();
 			String sql = "INSERT INTO orders (user_id, movie_id, price,showing_id) VALUES (?, ?, ?, ?)";
 			// 启用 RETURN_GENERATED_KEYS 以获取自增 ID
 			ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -39,7 +38,7 @@ public class OrderDao {
 			e.printStackTrace();
 		} finally {
 			// 修改：关闭 ResultSet
-			DBUtil.closeConnection(conn, ps, generatedKeys);  // 确保 DBUtil 能关闭 ResultSet
+			DBUtil.closeConnection(null, ps, generatedKeys);  // 确保 DBUtil 能关闭 ResultSet
 		}
 	}
 }

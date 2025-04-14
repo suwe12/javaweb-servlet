@@ -32,4 +32,20 @@ public class DBUtil {
 			e.printStackTrace();
 		}
 	}
+
+	public static void closeConnection(Connection conn) {
+		try {
+			if (conn != null && !conn.isClosed()) conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void rollbackCommit(Connection conn) {
+		try {
+			if (conn != null) conn.rollback();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 }

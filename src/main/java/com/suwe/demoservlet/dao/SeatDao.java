@@ -73,13 +73,11 @@ public class SeatDao {
 
 	}
 
-	public void updateSeatStatus(Long seatId, int status) {
-		Connection conn = null;
+	public void updateSeatStatus(Long seatId, int status,Connection conn) {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		try {
-			conn = DBUtil.getConnection();
 			String sql = "UPDATE seats SET status = ? WHERE id = ?";
 			ps = conn.prepareStatement(sql);
 			ps.setInt(1, status);
@@ -90,7 +88,7 @@ public class SeatDao {
 			throw new RuntimeException(e);
 		}
 		finally {
-			DBUtil.closeConnection(conn, ps, rs);
+			DBUtil.closeConnection(null, ps, rs);
 		}
 
 	}

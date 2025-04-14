@@ -8,12 +8,11 @@ import java.sql.SQLException;
 import java.sql.Connection;
 
 public class OrderSeatDao {
-	public void createOrderSeat(OrderSeat orderSeat) {
-		Connection conn = null;
+	public void createOrderSeat(OrderSeat orderSeat,Connection conn) {
+
 		PreparedStatement ps = null;
 
 		try {
-			conn = DBUtil.getConnection();
 			String sql = "INSERT INTO order_seat (order_id, seat_id) VALUES (?, ?)";
 			ps = conn.prepareStatement(sql);
 			ps.setLong(1, orderSeat.getOrderId());
@@ -22,7 +21,7 @@ public class OrderSeatDao {
 		} catch ( SQLException e) {
 			e.printStackTrace();
 		} finally {
-			DBUtil.closeConnection(conn, ps, null);
+			DBUtil.closeConnection(null, ps, null);
 		}
 	}
 }
