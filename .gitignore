@@ -1,16 +1,15 @@
 target/
-!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-
+out/
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea/
+.mvn/
 *.iws
 *.iml
 *.ipr
+.mvn/wrapper/
+
 
 ### Eclipse ###
 .apt_generated
@@ -36,3 +35,4 @@ build/
 
 ### Mac OS ###
 .DS_Store
+/out/artifacts/suu/WEB-INF/classes/com/suwe/demoservlet/service/UserService.class

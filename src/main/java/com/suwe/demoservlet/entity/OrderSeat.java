@@ -1,5 +1,6 @@
 package com.suwe.demoservlet.entity;
 
+//订单与座位关系
 public class OrderSeat {
 	private Long id;
 	private Long orderId; // 订单ID
